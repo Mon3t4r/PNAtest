@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Network Connectivity Tester</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      #form-container {
+        margin: 20px auto;
+        width: 50%;
+      }
+      input[type="text"],
+      select {
+        display: block;
+        margin-bottom: 10px;
+        width: 100%;
+      }
+      button {
+        display: block;
+        margin-top: 10px;
+        width: 100%;
+      }
+      #results-container {
+        margin-top: 20px;
+      }
+      ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Network Connectivity Tester</h1>
+    <div id="form-container">
+      <form id="fetch-form">
+        <label for="fetch-input-box">Enter URLs (separated by commas):</label>
+        <input
+          type="text"
+          id="fetch-input-box"
+          placeholder="http://10.37.129.2:9999/pna,http://127.0.0.1:7777/127,http://localhost:7777/local,http://0.0.0.0:7777/0"
+        />
+        <label for="fetch-method">HTTP Method:</label>
+        <select id="fetch-method">
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+        </select>
+        <label for="fetch-cors">Use CORS:</label>
+        <input type="checkbox" id="fetch-cors" />
+        <button type="submit">Test Connectivity</button>
+      </form>
+    </div>
+    <div id="results-container">
+      <h2>Results:</h2>
+      <ul id="fetch-results-list"></ul>
+    </div>
+
+    <script>
+      // client-side js, loaded by index.html
+      // run by the browser each time the page is loaded
+
+      const fetchInputBox = document.getElementById("fetch-input-box");
+      const fetchMethod = document.getElementById("fetch-method");
+      const fetchCors = document.getElementById("fetch-cors");
+      const fetchForm = document.getElementById("fetch-form");
+      const resultList = document.getElementById("fetch-results-list");
+
+      function appendResult(url, result) {
+        const text = `${url}: ${result}`;
+        const item = document.createElement("li");
+        item.appendChild(document.createTextNode(text));
+        resultList.appendChild(item);
+      }
+
+      function tryFetch(url, options) {
+        console.log(JSON.stringify(options));
+        return fetch(url, {
+          method: fetchMethod.value,
+          mode: fetchCors.checked ? "cors" : "no-cors", // 不检查CORS
+        })
+          .then((response) => {
+            appendResult(url, `response received`);
+          })
+          .catch((error) => {
+            appendResult(url, `error = ${error}`);
+          });
+      }
+
+      function tryFetchAll(urls) {
+        const fetches = [];
+        urls.forEach((url) => {
+          fetches.push(tryFetch(url));
+        });
+        return Promise.all(fetches);
+      }
+
+      fetchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!fetchInputBox.validity.valid) {
+          return;
+        }
+        const urls = fetchInputBox.value.split(/\s*,\s*/).filter(Boolean); // Split and filter empty strings
+        tryFetchAll(urls).then(() => {
+          // Optionally, you can clear the input box here or perform other actions
+        });
+      });
+    </script>
+  </body>
+</html>
